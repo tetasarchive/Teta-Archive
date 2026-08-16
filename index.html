@@ -35,13 +35,14 @@
         header {
             text-align: center;
             margin-bottom: 2rem;
-            cursor: pointer; /* Hidden trigger to log in */
+            cursor: pointer;
         }
 
         h1 {
             font-weight: 300;
             font-size: 1.75rem;
             letter-spacing: -0.05em;
+            user-select: none;
         }
 
         /* Nav Icons Bar */
@@ -143,11 +144,7 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transition: transform 0.2s;
-        }
-
-        #admin-add-btn:hover {
-            transform: scale(1.05);
+            z-index: 500;
         }
 
         /* Minimal Upload Modal Form */
@@ -255,6 +252,15 @@
             align-items: center;
             gap: 0.5rem;
         }
+        
+        .empty-state {
+            text-align: center;
+            color: var(--accent-color);
+            grid-column: 1 / -1;
+            padding: 4rem 0;
+            font-size: 0.95rem;
+            font-weight: 300;
+        }
     </style>
 </head>
 <body>
@@ -269,17 +275,12 @@
     </nav>
 
     <div class="container">
-        <!-- Gallery View -->
         <div id="view-gallery" class="grid"></div>
-
-        <!-- Albums View -->
         <div id="view-albums" class="grid hidden"></div>
     </div>
 
-    <!-- Hidden Create Button (Only for Admin) -->
     <button id="admin-add-btn" class="hidden" onclick="openUploadModal()"><i data-lucide="plus"></i></button>
 
-    <!-- Upload Modal -->
     <div id="upload-modal" class="modal hidden">
         <div class="modal-content">
             <h3 style="font-weight:300;">New Archive Post</h3>
@@ -295,7 +296,6 @@
         </div>
     </div>
 
-    <!-- Swipeable Photo Viewer Lightbox -->
     <div id="photo-viewer" class="viewer hidden">
         <button class="viewer-close" onclick="closeViewer()"><i data-lucide="x"></i></button>
         <div class="viewer-main">
@@ -310,27 +310,34 @@
     </div>
 
     <script>
-        // Sample Placeholder Data to Start with
-        let posts = [
-            { id: 1, url: 'https://unsplash.com', caption: 'Yosemite valley floors', album: 'Travel' },
-            { id: 2, url: 'https://unsplash.com', caption: 'Quiet afternoon fields', album: 'Nature' }
-        ];
-        let albums = ['Travel', 'Nature'];
+        // Load data instantly from browser permanent localStorage
+        let posts = JSON.parse(localStorage.getItem('teta_posts')) || [];
+        let albums = JSON.parse(localStorage.getItem('teta_albums')) || ['Travel', 'Nature'];
+        
         let isAdmin = false;
         let currentViewerIndex = 0;
         let activeTab = 'gallery';
+        let selectedAlbumFilter = null;
 
-        // Check if Admin password matches
+        function saveToStorage() {
+            localStorage.setItem('teta_posts', JSON.stringify(posts));
+            localStorage.setItem('teta_albums', JSON.stringify(albums));
+        }
+
         function triggerLogin() {
             let password = prompt("Enter Admin Password:");
-            if (password === 'admin123') { // Set your password here
+            if (password === 'admin123') {
                 isAdmin = true;
                 document.getElementById('admin-add-btn').classList.remove('hidden');
-                alert("Admin Access Granted. Use the '+' button below to post.");
+                alert("Admin Access Granted. Click the '+' button below to post.");
+                render();
             } else {
-                alert("Incorrect password. Viewer Mode only.");
+                alert("Incorrect password.");
             }
         }
 
-        // Allow pressing 'L' key to login discreetly
         window.addEventListener('keydown', (e) => {
+            if (e.key === 'l' || e.key === 'L') triggerLogin();
+        });
+
+        function switchTab(tab) {
