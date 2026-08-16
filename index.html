@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teta's Archive</title>
+    <!-- Google Fonts & Lucide Icons for ultra-minimal look -->
+    <link href="https://googleapis.com" rel="stylesheet">
+    <script src="https://unpkg.com"></script>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #111111;
+            --accent-color: #888888;
+            --card-bg: #f9f9f9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 2rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            cursor: pointer; /* Hidden trigger to log in */
+        }
+
+        h1 {
+            font-weight: 300;
+            font-size: 1.75rem;
+            letter-spacing: -0.05em;
+        }
+
+        /* Nav Icons Bar */
+        nav {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        nav button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--accent-color);
+            transition: color 0.2s ease;
+            padding: 0.5rem;
+        }
+
+        nav button.active, nav button:hover {
+            color: var(--text-color);
+        }
+
+        /* Photo Grid Layout */
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .post-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .post-card img {
+            width: 100%;
+            height: 280px;
+            object-fit: cover;
+            cursor: pointer;
+        }
+
+        .post-info {
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .post-caption {
+            font-size: 0.9rem;
+            color: var(--text-color);
+            font-weight: 400;
+        }
+
+        .download-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--accent-color);
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .download-btn:hover {
+            color: var(--text-color);
+        }
+
+        /* Hidden Views */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Floating Admin + Button */
+        #admin-add-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--text-color);
+            color: var(--bg-color);
+            border: none;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: transform 0.2s;
+        }
+
+        #admin-add-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Minimal Upload Modal Form */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255,255,255,0.98);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            width: 100%;
+            max-width: 400px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .modal-content input, .modal-content select, .modal-content button {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e1e1e1;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            background: transparent;
+            outline: none;
+        }
+
+        .modal-content button.primary {
+            background: var(--text-color);
+            color: var(--bg-color);
+            border: none;
+            cursor: pointer;
+        }
+
+        .modal-content button.secondary {
+            background: transparent;
+            border: none;
+            color: var(--accent-color);
+            cursor: pointer;
+        }
+
+        /* Lightbox Image Swipe Viewer */
+        .viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .viewer-close {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .viewer-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 800px;
+            padding: 0 1rem;
+        }
+
+        .viewer-img {
+            max-width: 80%;
+            max-height: 70vh;
+            object-fit: contain;
+        }
+
+        .viewer-nav {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--accent-color);
+        }
+
+        .viewer-nav:hover {
+            color: var(--text-color);
+        }
+
+        .viewer-footer {
+            margin-top: 1.5rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header onclick="triggerLogin()">
+        <h1>Teta's Archive</h1>
+    </header>
+
+    <nav>
+        <button id="nav-gallery" class="active" onclick="switchTab('gallery')"><i data-lucide="layout-grid"></i></button>
+        <button id="nav-albums" onclick="switchTab('albums')"><i data-lucide="folder"></i></button>
+    </nav>
+
+    <div class="container">
+        <!-- Gallery View -->
+        <div id="view-gallery" class="grid"></div>
+
+        <!-- Albums View -->
+        <div id="view-albums" class="grid hidden"></div>
+    </div>
+
+    <!-- Hidden Create Button (Only for Admin) -->
+    <button id="admin-add-btn" class="hidden" onclick="openUploadModal()"><i data-lucide="plus"></i></button>
+
+    <!-- Upload Modal -->
+    <div id="upload-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 style="font-weight:300;">New Archive Post</h3>
+            <input type="file" id="file-input" accept="image/*">
+            <input type="text" id="caption-input" placeholder="Add a caption...">
+            <select id="album-select">
+                <option value="General">General Gallery</option>
+                <option value="New">+ Create New Album</option>
+            </select>
+            <input type="text" id="new-album-input" placeholder="New album name..." class="hidden">
+            <button class="primary" onclick="handleUpload()">Publish</button>
+            <button class="secondary" onclick="closeUploadModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Swipeable Photo Viewer Lightbox -->
+    <div id="photo-viewer" class="viewer hidden">
+        <button class="viewer-close" onclick="closeViewer()"><i data-lucide="x"></i></button>
+        <div class="viewer-main">
+            <button class="viewer-nav" onclick="navigateViewer(-1)"><i data-lucide="chevron-left"></i></button>
+            <img id="viewer-img" class="viewer-img" src="" alt="">
+            <button class="viewer-nav" onclick="navigateViewer(1)"><i data-lucide="chevron-right"></i></button>
+        </div>
+        <div class="viewer-footer">
+            <p id="viewer-caption" class="post-caption"></p>
+            <button id="viewer-download" class="download-btn"><i data-lucide="download"></i></button>
+        </div>
+    </div>
+
+    <script>
+        // Sample Placeholder Data to Start with
+        let posts = [
+            { id: 1, url: 'https://unsplash.com', caption: 'Yosemite valley floors', album: 'Travel' },
+            { id: 2, url: 'https://unsplash.com', caption: 'Quiet afternoon fields', album: 'Nature' }
+        ];
+        let albums = ['Travel', 'Nature'];
+        let isAdmin = false;
+        let currentViewerIndex = 0;
+        let activeTab = 'gallery';
+
+        // Check if Admin password matches
+        function triggerLogin() {
+            let password = prompt("Enter Admin Password:");
+            if (password === 'admin123') { // Set your password here
+                isAdmin = true;
+                document.getElementById('admin-add-btn').classList.remove('hidden');
+                alert("Admin Access Granted. Use the '+' button below to post.");
+            } else {
+                alert("Incorrect password. Viewer Mode only.");
+            }
+        }
+
+        // Allow pressing 'L' key to login discreetly
+        window.addEventListener('keydown', (e) => {
